@@ -4,7 +4,7 @@ const time = document.getElementById('time'),
   greeting = document.getElementById('greeting'),
   video = document.getElementById('video'),
   name = document.getElementById('name'),
-  focus = document.getElementById('focus');
+  focu = document.getElementById('focus');
 
 var yourHour = document.getElementById('YourHour'),
     yourMins = document.getElementById('YourMins');
@@ -121,9 +121,16 @@ function setName(e) {
     if (e.which == 13 || e.keyCode == 13) {
       localStorage.setItem('name', e.target.innerText);
       name.blur();
+      console.log(e.target.innerText);
+      if (e.target.innerText === '') {
+        name.textContent = '[Enter Name]';
+      }
     }
-  } else {
+  }  else {
     localStorage.setItem('name', e.target.innerText);
+    if (e.target.innerText === '') {
+        name.textContent = '[Enter Name]';
+      }
   }
 }
 
@@ -131,41 +138,76 @@ function setHour(e) {
   if (e.type === 'keypress') {
     if (e.which == 13 || e.keyCode == 13) {
       yourHour = e.target.innerText;
+      this.blur();
+      if (e.target.innerText === '' || e.target.innerText === ' ') {
+        e.target.innerText = '__';
+        yourHour.textContent = e.target.innerText;
+      }
     }
   } else {
     yourHour = e.target.innerText;
+    if (e.target.innerText === '' || e.target.innerText === ' ') {
+      e.target.innerText = '__';
+      yourHour.textContent = e.target.innerText;
+    }
   }
-  console.log (yourHour);
 }
 function setMins(e) {
   if (e.type === 'keypress') {
     if (e.which == 13 || e.keyCode == 13) {
       yourMins = e.target.innerText;
+      this.blur();
+      setInterval();
+      if (e.target.innerText === '' || e.target.innerText === ' ') {
+        e.target.innerText = '__';
+        yourMins.textContent = e.target.innerText;
+      }
     }
   } else {
     yourMins = e.target.innerText;
+    setInterval();
+    if (e.target.innerText === '' || e.target.innerText === ' ') {
+      e.target.innerText = '__';
+      yourMins.textContent = e.target.innerText;
+    }
   }
-  console.log (yourMins);
-  notifOn = true;
-  callNotification();
 }
+
+function setInterval() {
+  let start = new Date(),
+  hour = start.getHours(),
+  min = start.getMinutes();
+  let hourNew = +yourHour;
+  let minsNew = +yourMins;
+  
+  hour = hour * 60 + min;
+  hourNew = hourNew * 60 + minsNew;
+  if (yourHour - hour < 0) {
+    hourNew = 1440 - (( 1440 - hour ) + hourNew);
+    if (hourNew < 0) {
+      hourNew = Math.abs(hourNew);
+      hourNew = hourNew * 60000;
+      notifOn = true;
+      setTimeout(callNotification, hourNew);
+    } else if (hourNew > 0) {
+      hourNew = ( 1440 - hour ) + ( hour - hourNew );
+      hourNew = hourNew * 60000;
+      notifOn = true;
+      setTimeout(callNotification, hourNew);
+    }
+  }
+};
 
 // Get Focus
 function getFocus() {
   if (localStorage.getItem('focus') === null) {
-    focus.textContent = '[Enter Focus]';
+    focu.textContent = '[Enter Focus]';
   } else {
-    focus.textContent = localStorage.getItem('focus');
+    focu.textContent = localStorage.getItem('focus');
   }
 }
 
 function callNotification() {
-  if (notifOn === true) {
-    let today = new Date(),
-      hour = today.getHours();
-      min = today.getMinutes();
-      sec = today.getSeconds();
-
       let hourNew = +yourHour;
       let minsNew = +yourMins;
       let target = localStorage.getItem('focus');
@@ -173,9 +215,7 @@ function callNotification() {
       let notific = 'Today at ' + hourNew + ':' + minsNew + ' you scheduled: ' + target;
       notific = String(notific);
 
-      var time = setTimeout(callNotification, 20000);
-
-    if (hour === hourNew && min === minsNew && notifOn === true) {
+    if (notifOn === true) {
         Push.create("Hello! This is your reminder!", {
           body: notific,
           icon: '/images/Jingles.png',
@@ -186,34 +226,24 @@ function callNotification() {
           }
       });
         console.log (notific);
-        clearTimeout(time);
         notifOn === false;
     };
-    
-  } else {
-    return false;
   }
-}
 
 // Set Focus
 function setFocus(e) {
   if (e.type === 'keypress') {
-    // Make sure enter is pressed
     if (e.which == 13 || e.keyCode == 13) {
       localStorage.setItem('focus', e.target.innerText);
-      focus.blur();
+      focu.blur();
+      if (e.target.innerText === '') {
+        focu.textContent = '[Enter Focus]';
+      }
     }
   } else {
     localStorage.setItem('focus', e.target.innerText);
-    if (!("Notification" in window)) {
-      alert("This browser does not support desktop notification");
-    }
-    else if (Notification.permission === "default") {
-      Notification.requestPermission(function(permission){
-        console.log('Результат запроса прав:', permission);
-      });
-    } else {
-      return true;
+    if (e.target.innerText === '') {
+      focu.textContent = '[Enter Focus]';
     }
   }
 }
@@ -225,9 +255,23 @@ name.onclick = function() {
     return false;
   }
 }
-focus.onclick = function() {
-  if (name.textContent === '[Enter Focus]') {
-    name.textContent = ' ';
+focu.onclick = function() {
+  if (focu.textContent === '[Enter Focus]') {
+    focu.textContent = ' ';
+  } else {
+    return false;
+  }
+}
+yourMins.onclick = function() {
+  if (yourMins.textContent === '__') {
+    yourMins.textContent = ' ';
+  } else {
+    return false;
+  }
+}
+yourHour.onclick = function() {
+  if (yourHour.textContent === '__') {
+    yourHour.textContent = ' ';
   } else {
     return false;
   }
@@ -239,8 +283,8 @@ yourMins.addEventListener('keypress', setMins);
 yourMins.addEventListener('blur', setMins);
 name.addEventListener('keypress', setName);
 name.addEventListener('blur', setName);
-focus.addEventListener('keypress', setFocus);
-focus.addEventListener('blur', setFocus);
+focu.addEventListener('keypress', setFocus);
+focu.addEventListener('blur', setFocus);
 
 // Run
 showTime();
